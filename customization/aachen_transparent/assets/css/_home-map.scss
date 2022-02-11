@@ -1,0 +1,12 @@
+.index-v2 {
+  .home-container {
+    padding: $index-section-default-padding 0;
+  }
+
+  .home-container-title {
+    align-items: top;
+
+    background-image: url('../images/rathaus.jpg');
+    background-size: 100%;
+  }
+}
