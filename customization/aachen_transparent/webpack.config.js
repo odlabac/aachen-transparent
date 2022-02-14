@@ -4,6 +4,6 @@
 
 module.exports = {
     entry: {
-        "mainapp-aachen": '../customization/aachen_transparent/assets/js/bedburg-main'
+        "mainapp-aachen": '../customization/aachen_transparent/assets/js/aachen-main'
     }
 };
