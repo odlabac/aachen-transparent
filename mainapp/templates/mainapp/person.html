@@ -10,6 +10,42 @@
                 <div class="float-end">{% include 'partials/subscribe_widget.html' %}</div>
             {% endif %}
             <h1>{{ person }}</h1>
+            <img class="profile-picture" alt="{{ person }}" src="https://ratsinfo.aachen.de/bi/images/kp/kp{{ person.allris_id }}.jpg">
+
+            <ul>
+                <li><a href="{{ person.web }}">Ratsinfo Seite</a></li>
+                <li><a href="{{ person.oparl_id }}">OParl Datensatz</a></li>
+            </ul>
+
+            <dl>
+                <dt>Bekannt seit</dt>
+                <dl>{{ person.created }}</dl>
+                <dt>Zuletzt modifiziert</dt>
+                <dl>{{ person.modified }}</dl>
+            </dl>
+
+            {% if person.location %}
+            <section class="person-section-location">
+                <h2>Adresse</h2>
+            {% with person.location as loc %}
+            {{ loc.name }}
+            <dl>
+                {% if loc.street_address %}
+                <dt>Straße</dt>
+                <dl>{{ loc.street_address }}</dl>
+                {% endif %}
+                {% if loc.locality %}
+                <dt>Stadt</dt>
+                {% endif %}
+                <dl>{% if loc.postal_code %}{{ loc.postal_code }} {% endif %}{{ loc.locality }}</dl>
+                {% if loc.room %}
+                <dt>Raum</dt>
+                <dl>{{ loc.room }}</dl>
+                {% endif %}
+            </dl>
+            {% endwith %}
+            </section>
+            {% endif %}
         </section>
         {% if papers %}
             <section class="person-section-papers">

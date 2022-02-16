@@ -6,6 +6,9 @@ from typing import TypeVar, Type
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
+
 
 class SoftDeleteModelManager(models.Manager):
     def get_queryset(self):
@@ -42,6 +45,12 @@ class DefaultFields(models.Model):
     objects_with_deleted = SoftDeleteModelManagerWithDeleted()
 
     history = HistoricalRecords(inherit=True)
+
+    @property
+    def allris_id(self):
+        parsed_url = urlparse(self.oparl_id)
+        id = parse_qs(parsed_url.query)["id"][0]
+        return int(id)
 
     @classmethod
     def by_oparl_id(cls, oparl_id):

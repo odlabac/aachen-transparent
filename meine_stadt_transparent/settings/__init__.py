@@ -55,7 +55,7 @@ ROOT_URLCONF = "meine_stadt_transparent.urls"
 WSGI_APPLICATION = "meine_stadt_transparent.wsgi.application"
 
 # forcing request.build_absolute_uri to return https
-os.environ["HTTPS"] = "on"
+# os.environ["HTTPS"] = "on"
 
 MAIL_PROVIDER = env.str("MAIL_PROVIDER", "smtp").lower()
 if MAIL_PROVIDER != "smtp":
@@ -169,6 +169,9 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "node_modules/pdfjs-dist/viewer"),  # See desgin.md
 )
 
+SERVE_STATIC_FILES = env.str("SERVE_STATIC_FILES", DEBUG)
+
+# Minio / S3 Settings
 MINIO_PREFIX = env.str("MINIO_PREFIX", "meine-stadt-transparent-")
 MINIO_ACCESS_KEY = env.str("MINIO_ACCESS_KEY", "meinestadttransparent")
 MINIO_SECRET_KEY = env.str("MINIO_SECRET_KEY", "meinestadttransparent")
@@ -204,11 +207,18 @@ if ELASTICSEARCH_ENABLED and "django_elasticsearch_dsl" not in INSTALLED_APPS:
 
 ELASTICSEARCH_URL = env.str("ELASTICSEARCH_URL", "localhost:9200")
 
+ELASTICSEARCH_VERIFY_CERTS = env.bool("ELASTICSEARCH_VERIFY_CERTS", True)
+
+if not ELASTICSEARCH_VERIFY_CERTS:
+    import urllib3
+
+    urllib3.disable_warnings()
+
 ELASTICSEARCH_DSL = {
     "default": {
         "hosts": ELASTICSEARCH_URL,
         "timeout": env.int("ELASTICSEARCH_TIMEOUT", 10),
-        "verify_certs": env.bool("ELASTICSEARCH_VERIFY_CERTS", True),
+        "verify_certs": ELASTICSEARCH_VERIFY_CERTS,
     }
 }
 
