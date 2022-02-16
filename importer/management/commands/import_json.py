@@ -11,7 +11,6 @@ from importer.functions import fix_sort_date
 from importer.import_json import import_data
 from importer.importer import Importer
 from importer.json_datatypes import RisData, converter, format_version
-from importer.loader import BaseLoader
 from mainapp import models
 from mainapp.functions.city_to_ags import city_to_ags
 from mainapp.functions.citytools import import_outline, import_streets
@@ -101,7 +100,7 @@ class Command(BaseCommand):
         fix_sort_date(datetime.datetime.now(tz=tz.tzlocal()))
 
         if not options["skip_download"]:
-            Importer(BaseLoader(dict()), force_singlethread=True).load_files(
+            Importer(force_singlethread=True).load_files(
                 fallback_city=settings.GEOEXTRACT_SEARCH_CITY or body.short_name
             )
 

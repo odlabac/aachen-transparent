@@ -55,7 +55,7 @@ class Importer:
 
     def __init__(
         self,
-        loader: BaseLoader,
+        loader: BaseLoader = BaseLoader(),
         default_body: Optional[Body] = None,
         ignore_modified: bool = False,
         download_files: bool = True,

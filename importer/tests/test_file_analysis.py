@@ -6,7 +6,6 @@ import pytest
 from django.test import TestCase, override_settings
 
 from importer.importer import Importer
-from importer.loader import BaseLoader
 from importer.tests.utils import MockLoader
 from mainapp.functions.document_parsing import AddressPipeline
 from mainapp.models import Body, File
@@ -71,7 +70,7 @@ class MockImporter(Importer):
     reason="Github actions seems to not respect the memory limit",
 )
 def test_load_file_oom(caplog):
-    importer = MockImporter(BaseLoader({}), force_singlethread=True)
+    importer = MockImporter(force_singlethread=True)
 
     with override_settings(SUBPROCESS_MAX_RAM=1 * 1024 * 1024):
         failed = importer.load_files_multiprocessing(

@@ -21,7 +21,7 @@ class BaseLoader:
     This class can be overwritten for vendor specific fixups
     """
 
-    def __init__(self, system: JSON) -> None:
+    def __init__(self, system: JSON = {}) -> None:
         self.system = system
 
     def load(self, url: str, query: Optional[Dict[str, str]] = None) -> JSON:

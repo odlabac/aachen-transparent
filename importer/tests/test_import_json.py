@@ -33,7 +33,6 @@ from importer.json_datatypes import (
     Person,
     File,
 )
-from importer.loader import BaseLoader
 from mainapp import models
 from mainapp.functions.minio import minio_client, minio_file_bucket
 from mainapp.functions.notify_users import NotifyUsers
@@ -449,7 +448,7 @@ def test_manual_deletion(pytestconfig, caplog):
             status=200,
             content_type="text/plain",
         )
-        importer = Importer(BaseLoader({}), force_singlethread=True)
+        importer = Importer(force_singlethread=True)
         [successful, failed] = importer.load_files(sample_city.name)
         assert successful == 1 and failed == 0
 
@@ -468,7 +467,7 @@ def test_manual_deletion(pytestconfig, caplog):
 
     assert not models.File.objects.filter(pk=file_id).first()
     with responses.RequestsMock():
-        importer = Importer(BaseLoader({}), force_singlethread=True)
+        importer = Importer(force_singlethread=True)
         [successful, failed] = importer.load_files(sample_city.name)
         assert successful == 0 and failed == 0
 
@@ -490,7 +489,7 @@ def test_file_404(pytestconfig, caplog):
 
     with responses.RequestsMock() as requests_mock:
         requests_mock.add(responses.GET, url, status=404, content_type="text/plain")
-        importer = Importer(BaseLoader({}), force_singlethread=True)
+        importer = Importer(force_singlethread=True)
         [successful, failed] = importer.load_files(sample_city.name, update=True)
         assert successful == 0 and failed == 1
 
