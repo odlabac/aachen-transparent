@@ -44,6 +44,9 @@ RUN apt-get update && \
     mkdir /static && \
     chown www-data:www-data -R /static
 
+RUN mkdir -p /app && \
+    chown www-data: /app
+
 USER www-data
 
 COPY --chown=www-data:www-data --from=venv-build /app/.venv /app/.venv
