@@ -1,0 +1,13 @@
+---
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStoreUser
+metadata:
+  name: aachen-transparent
+  namespace: rook-ceph
+spec:
+  store: store
+  displayName: "Aachen Transparent"
+  quotas:
+    maxBuckets: 100
+    maxSize: 200G
+    maxObjects: 1000000

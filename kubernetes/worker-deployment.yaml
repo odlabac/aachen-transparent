@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: frontend
+        image: meine-stadt-transparent
+        command: ["/app/.venv/bin/python", "/app/manage.py", "qcluster"]
+        resources:
+          limits:
+            memory: 8Gi
+            cpu: "16"
+          requests:
+            memory: 2Gi
+            cpu: "1"
+        envFrom:
+        - secretRef:
+            name: config
+        env:
+        - name: ELASTICSEARCH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aachen-transparent-es-elastic-user
+              key: elastic
+        - name: ELASTICSEARCH_URL
+          value: https://elastic:$(ELASTICSEARCH_PASSWORD)@aachen-transparent-es-http:9200
+        - name: MINIO_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: aachen-transparent-files
+              key: BUCKET_HOST
+        - name: MINIO_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: aachen-transparent-files
+              key: BUCKET_REGION
+        # We use a dedicated CephObjectStoreUser with manually granted access
+        # to all buckets (files, cache, gpg-keys)
+        # See: env.txt and objectbucketuser.yaml
+        #
+        # - name: MINIO_ACCESS_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: aachen-transparent-files
+        #       key: AWS_ACCESS_KEY_ID
+        # - name: MINIO_SECRET_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: aachen-transparent-files
+        #       key: AWS_SECRET_ACCESS_KEY

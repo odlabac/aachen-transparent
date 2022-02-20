@@ -1,0 +1,8 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: objectstore
+spec:
+  type: ExternalName
+  externalName: rook-ceph-rgw-store.rook-ceph.svc.k8s.0l.de
