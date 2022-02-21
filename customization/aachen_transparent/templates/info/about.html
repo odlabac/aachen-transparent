@@ -15,7 +15,8 @@
         </p>
 
         <h2>Funktionalität</h2>
-        <p>Durch Meine Stadt Transparent erfahren Bürgerinnen und Bürger, wer für sie im Stadtrat sitzt, wann der Stadtrat tagt und welche Themen besprochen werden.
+
+	<p>Durch Meine Stadt Transparent erfahren Bürgerinnen und Bürger, wer für sie im Stadtrat sitzt, wann der Stadtrat tagt und welche Themen besprochen werden.
             Da alle Dokumente räumlich auf einer Karte verortet werden, sind leicht jene Themen erkennbar, die sich auf das unmittelbare Lebensumfeld beziehen.</p>
         <p>Großen Wert legen wir auf eine intuitiv und flexible Suche: Mit einer zentralen Suche lässt sich die gesamte Seite - Sitzungsvorlagen, Tagesordnungen, uvm. - im Volltext durchsuchen, genauso wie gewählte Stadtratsmitglieder oder Ausschüsse.
             Um auch dauerhaft auf dem Laufenden zu bleiben, bietet „Aachen Transparent“ verschiedene Anschlusspunkte: Nutzer können sich E-Mail-Benachrichtigungen anlegen, die über neue Dokumente zu abonnierten Suchbegriffen informiere.
@@ -23,12 +24,43 @@
         <p>Aachen Transparent ist kein isoliertes System, sondern greift auf das existierende Ratsinformationssysteme der Stadt Aachen zurück, um von dort Daten automatisch zu beziehen und aufzubereiten.
             Die Verwaltung von Dokumenten erfolgt weiterhin über ein klassisches Ratsinformationssystem, zu dem Aachen Transparent eine moderne Oberfläche bietet.</p>
 
-        <h3>Im Überblick:</h3>
-        <ul>
-            
-        </ul>
+	<h4>Im Überblick</h4>
+	<ul>
+		<li>Volltextsuche durch alle Dokument</li>
+		<li>Texterkennung für gescannte Dokumente</li>
+		<li>Georeferenzierung von Dokumenten</li>
+		<li>iCal Kalender für Integration in Outlook, Google und andere Kalender</li>
+		<li>RSS Feeds</li>
+		<li>Abonnierbare Suchen mit E-Mail Benachrichtungen</li>
+	</ul>
 
-        <h2>Statistiken: {{ settings.TEMPLATE_META.logo_name }}</h2>
+	<h2>Häufige Fragen</h2>
+
+	<h3>Wer steckt hinter Aachen Transparent?</h3>
+	<p>
+		<i>Aachen Transparent</i> ist Angebot das auf ehrenamtlicher Basis von Privatpersonen im Umfeld des <a href="https://odlabac.de/">Open Data Labs Aachen</a> betrieben wird.
+		Es ist daher kein Angebot der Stadt Aachen.
+	</p>
+
+	<h3>Kann ich <i>Aachen Transparent</i> auch in meiner Stadt/Gemeinde einsetzen?</h3>
+	<p>
+		Ja! Aachen Transparent basiert auf der Open Source Software <a href="https://meine-stadt-transparent.de/">Meine Stadt Transparent</a>, die gemeinschaftlich von mehreren Open Data Labs und interessierten Privatpersonen entwickelt wird.
+		Daher ist es prinzipiell auch möglich eine separate Instanz der Software für ihre Gemeinde aufzusetzen.
+	</p>
+
+	<h3>Wie kann ich euch erreichen?</h3>
+	<p>
+		Bitte schauen Sie auf unserer <a href="/info/contact">Kontakt-Seite</a> vorbei.
+	</p>
+
+	<h3>Es funktioniert nicht! 😠</h3>
+	<p>
+		Als ehrenamtliches Angebot können wir uns um <i>Aachen ist Transparent</i> leider nur in unserer Freizeit kümmern.
+		Daher kann es schonmal vorkommen, dass die Seite nicht verfügbar oder einzellne Teile der Seite nicht funktionieren.
+		Wir bitten daher um Verständnis und freuen uns über jegliches konstruktives Feedback.
+	</p>
+
+        <h2>Statistiken aus {{ settings.TEMPLATE_META.logo_name }}</h2>
         <dl>
             {% for key, value in stats.items %}
                 <div class="row">

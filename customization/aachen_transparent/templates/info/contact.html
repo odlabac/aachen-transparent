@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+
+{% block title %}{% trans "Contact" %}{% endblock %}
+
+{% block content %}
+    <article class="container infopage">
+        <h1>Impressum</h1>
+
+	<h2>Angaben gemäß § 5 TMG</h2>
+	<p>
+		Diese Website ist ein privates publizistisches Angebot von:
+	</p>
+
+        <address>
+            Steffen Vogel<br>
+            Aureliusstr. 42<br>
+            52064 Aachen
+        </address>
+
+        <h1>Kontakt</h1>
+	<p>
+		Sie können mich über folgende Kanläe kontaktieren:
+	</p>
+        <p>
+		<span class="fa-custom fa-envelope"></span> <b>eMail:</b> <a href="mailto:{{ settings.TEMPLATE_META.contact_mail }}">{{ settings.TEMPLATE_META.contact_mail }}</a><br>
+		<span class="fa-brands fa-twitter"></span> <b>Twitter:</b> <a href="https://twitter.com/stv0g">@stv0g</a><br>
+		<span class="fa-brands fa-github"></span> <b>Github:</b> <a href="https://github.com/stv0g">@stv0g</a><br>
+        </p>
+
+	<h1>Urheberrecht &amp; Datenquelle</h1>
+	<p>
+		Die Inhalte auf <i>Aachen Transparent</i> stammen aus dem <a href="https://ratsinfo.aachen.de/bi/allris.net.asp">Ratsinformationssystem der Stadt Aachen</a>.
+		Sie werden hier unveränderter und barrierefreier Form angeboten.
+		Die Daten aus dem Ratsinformationssystem werden in regelmäßigen Abständen automatisiert über die <a href="https://offenedaten.aachen.de/dataset/oparl-schnittstelle-zum-ratsinformationsystem-der-stadt-aachen">OParl-Schnittstelle</a> abgeglichen.
+
+		Die durch die OParl-Schnittstelle bereitgestellten Informationen werden von der Stadt Aachen als Open Data (dt. Offene Daten) under der <i><a href="https://www.govdata.de/dl-de/by-2-0"></i>Datenlizenz Deutschland – Namensnennung – Version 2.0</a></i> bereitgestellt.
+	</p>
+	<p>
+		<b>Bei Fragen zu den Inhalten auf dieser Website oder bzgl. des Urheberrechts bitten wir Sie sich daher an den Herrausgeber der Daten, also die Stadt Aachen, direkt zu wenden.</b>
+	</p>
+	<p>
+		Details dazu finden Sie im <a href="https://ratsinfo.aachen.de/bi/impressum.asp">Impressum des Ratsinformationssystems</a>.
+	</p>
+    </article>
+{% endblock %}
