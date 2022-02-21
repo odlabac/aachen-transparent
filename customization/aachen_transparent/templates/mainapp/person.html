@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ person }}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <section class="person-section-head">
+	    {% if settings.ACCOUNT_MANAGEMENT_VISIBLE %}
+                <div class="float-end">{% include 'partials/subscribe_widget.html' %}</div>
+            {% endif %}
+            <h1>{{ person }}</h1>
+		<div class="row">
+			<div class="col">
+				<h2>Steckbrief</h2>
+				<dl>
+					<dt>Bekannt seit</dt>
+					<dl>{{ person.created }}</dl>
+					<dt>Zuletzt modifiziert</dt>
+					<dl>{{ person.modified }}</dl>
+				</dl>
+
+				<p>
+					<span class="fa fa-building"></span> <a href="https://ratsinfo.aachen.de/bi/kp020.asp?KPLFDNR={{ person.allris_id }}">Ratsinfo Seite</a><br />
+					<span class="fa-solid fa-code"></span> <a href="{{ person.oparl_id }}">OParl Datensatz</a>
+				</p>
+
+				{% if person.location and false %}
+				{% with person.location as loc %}
+				<h2>Adresse</h2>
+				{{ loc.name }}
+				<dl>
+				{% if loc.street_address %}
+					<dt>Straße</dt>
+					<dl>{{ loc.street_address }}</dl>
+				{% endif %}
+				{% if loc.locality %}
+					<dt>Stadt</dt>
+					<dl>{% if loc.postal_code %}{{ loc.postal_code }} {% endif %}{{ loc.locality }}</dl>
+				{% endif %}
+				{% if loc.room %}
+					<dt>Raum</dt>
+					<dl>{{ loc.room }}</dl>
+				</dl>
+				{% endif %}
+				{% endwith %}
+				{% endif %}
+			</div>
+			<div class="col">
+				<img onerror="this.style.display='none'" class="profile-picture" alt="{{ person }}" src="https://ratsinfo.aachen.de/bi/images/kp/kp{{ person.allris_id }}.jpg">
+			</div>
+		</div>
+            </section>
+        </section>
+        {% if papers %}
+            <section class="person-section-papers">
+                <h2>{% trans "Submitted Papers" %}</h2>
+                <ul>
+                    {% for paper in papers %}
+                        <li><a href="{% url 'paper' paper.id %}">{{ paper.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+        {% if memberships %}
+            <section class="person-section-memberships">
+                <h2>{% trans "Memberships" %}</h2>
+                {% include "partials/person_membership_section.html" %}
+            </section>
+        {% endif %}
+        {% if mentioned_in %}
+            <section class="person-section-mentions">
+                <h2 class="clearfix">
+                    {% trans "Mentioned in" %}
+                    <a class="btn btn-sm btn-primary float-end" href="{{ to_search_url }}">
+                        {% trans "Open in Search" %}
+                    </a>
+                </h2>
+                <ul class="papers">
+                    {% for mentioned_in_paper, mentioned_in_files in mentioned_in.items %}
+                        <li class="paper">
+                            <a class="paper-link" href="{% url 'paper' mentioned_in_paper.id %}">{{ mentioned_in_paper }}</a>
+                            <span class="text-muted">{{ mentioned_in_paper.modified|date }}</span>
+                            <ul class="files">
+                                {% for file in mentioned_in_files %}
+                                    <li class="file">
+                                        <a class="file-link" href="{% url 'file' file.id %}">{{ file }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+    </div>
+{% endblock %}
