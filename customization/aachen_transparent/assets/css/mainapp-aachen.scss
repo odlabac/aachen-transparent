@@ -3,8 +3,6 @@ $body-bg: #dddddd;
 $dark: #363636;
 $navbar-dark-color: white;
 
-$main-content-margin-top: 0px;
-
 @import "../../../../mainapp/assets/css/mainapp";
 
 article {
@@ -15,30 +13,48 @@ img.profile-picture {
     width: 100%;
 }
 
+section.home-container-title {
+	div.more-info-link {
+		a {
+			background-color: rgba(219, 235, 255, 0.5);
+			padding: 0.5em;
+			border-radius: 0.8em;
+			border: 2px #005abf solid;
+			font-weight: bolder;
+		}
+
+		span {
+			margin-left: 0.5em;
+		}
+	}
+}
+
 #main-content {
-    .container {
-        // min-height: calc(100vh - #{$header-height} - #{$footer-height} - 2 * #{$main-content-margin-top});
-        background-color: white;
-        padding-top: 40px;
-        padding-bottom: 40px;
-    }
+	margin: 0px auto;
+}
+
+#main-content > article {
+	min-height: calc(100vh - #{$header-height} - #{$footer-height});
+}
+
+#main-content > .container {
+	background-color: white;
+	padding-top: 40px;
+	padding-bottom: 40px;
 }
 
 .index-v2 {
-    .home-container {
-      padding: $index-section-default-padding 0;
-    }
-  
-    .home-container-title {
-      align-items: top;
-  
-      background-image: url('../images/rathaus.jpg');
-      background-size: 100%;
-    }
-  
-    .home-container-search {
-      background-color: $primary;
-    }
+	.home-container-title {
+		align-items: start;
+		padding-top: 40px;
+
+		background-image: url('../images/rathaus.jpg');
+		background-size: 100%;
+	}
+
+	.home-container-search {
+		background-color: $primary;
+	}
   }
-  
-  
+
+
