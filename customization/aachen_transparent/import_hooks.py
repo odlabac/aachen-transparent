@@ -21,6 +21,9 @@ def sanitize_common(obj):
 
 
 def sanitize_web(obj):
+    return
+
+    # Not ready yet
     if obj.web:
         return
 
