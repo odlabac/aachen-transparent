@@ -51,7 +51,7 @@ class TestEmbeddedUpdate(TestCase):
 
     def test_embedded_update(self):
         loader = build_mock_loader()
-        importer = Importer(loader, force_singlethread=True)
+        importer = Importer(loader, excecutor=SingleThreadExecutor)
         importer.run(self.body["id"])
         paper_id = make_paper([])["id"]
         self.assertEqual(Paper.objects.count(), 1)
@@ -69,7 +69,7 @@ class TestEmbeddedUpdate(TestCase):
 
     def test_update_without_change_is_ignored(self):
         loader = build_mock_loader()
-        importer = Importer(loader, force_singlethread=True)
+        importer = Importer(loader, excecutor=SingleThreadExecutor)
         importer.run(self.body["id"])
         [paper] = Paper.objects.all()
         self.assertEqual(paper.history.count(), 1)

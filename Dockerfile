@@ -12,13 +12,37 @@ RUN npm ci --also=dev
 COPY etc /app/etc
 COPY customization /app/customization
 COPY mainapp/assets /app/mainapp/assets
-RUN npm run build:prod && mkdir -p mainapp/templates/email/ && npm run build:email
+
+RUN npm run build:prod && \
+    mkdir -p mainapp/templates/email/ && \
+    npm run build:email
 
 # Stage 2: Build the .venv folder
 FROM python:3.8-slim-bullseye AS venv-build
 
 RUN apt-get update && \
-    apt-get install -y curl gnupg git default-libmysqlclient-dev libmagickwand-dev poppler-utils libssl-dev libpq-dev gettext && \
+    apt-get install -y \
+        curl \
+        gnupg \
+        git \
+        gettext \
+        build-essential \
+        default-libmysqlclient-dev \
+        libssl-dev \
+        libpq-dev \
+        libsm6 libxext6 libxrender-dev \
+        libqpdf-dev \
+        ghostscript \
+        img2pdf \
+        libffi-dev \
+        pngquant \
+        poppler-utils \
+        unpaper \
+        zlib1g \
+        libtesseract-dev \
+        tesseract-ocr-osd \
+        tesseract-ocr-deu \
+        tesseract-ocr-eng && \
     curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python - --version 1.1.8
 
 COPY pyproject.toml /app/pyproject.toml
@@ -37,7 +61,25 @@ FROM python:3.8-slim-bullseye
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && \
-    apt-get install -y git default-libmysqlclient-dev libmagickwand-dev poppler-utils libssl-dev libpq-dev gettext && \
+    apt-get install -y \
+        git \
+        gettext \
+        default-mysql-client-core \
+        libssl1.1 \
+        libpq5 \
+        libsm6 libxext6 libxrender1 \
+        libqpdf21 \
+        ghostscript \
+        img2pdf \
+        libffi6 \
+        pngquant \
+        poppler-utils \
+        unpaper \
+        zlib1g \
+        libtesseract4 \
+        tesseract-ocr-osd \
+        tesseract-ocr-deu \
+        tesseract-ocr-eng && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \

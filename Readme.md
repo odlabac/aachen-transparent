@@ -145,8 +145,30 @@ If you have a Kubernetes cluster, you can have a look at [this experimental setu
 On Debian/Ubuntu:
 
 ```
-sudo apt install python3-pip python3-venv python3-dev nodejs \
-    git libmysqlclient-dev libmagickwand-dev poppler-utils libssl-dev gettext
+sudo apt install \
+    build-essential \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    nodejs \
+    git \
+    gettext \
+    default-libmysqlclient-dev \
+    libssl-dev \
+    libpq-dev \
+    libsm6 libxext6 libxrender-dev \
+    libqpdf-dev \
+    ghostscript \
+    img2pdf \
+    libffi-dev \
+    pngquant \
+    poppler-utils \
+    unpaper \
+    zlib1g \
+    libtesseract-dev \
+    tesseract-ocr-osd \
+    tesseract-ocr-deu \
+    tesseract-ocr-eng
 ```
 
 Install dependencies.

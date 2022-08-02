@@ -182,6 +182,31 @@ MINIO_PUBLIC_SECURE = env.bool("MINIO_PUBLIC_SECURE", True)
 
 SCHEDULES_ENABLED = env.bool("SCHEDULES_ENABLED", False)
 
+# OCRmyPDF Settings
+OCR_THREADS_PER_WORKER = env.int("OCR_THREADS_PER_WORKER", None)
+OCR_PAGES = env.int("OCR_PAGES", 0)
+
+# The default language that tesseract will attempt to use when parsing
+# documents.  It should be a 3-letter language code consistent with ISO 639.
+OCR_LANGUAGE = env.str("OCR_LANGUAGE", "eng")
+
+# ocrmypdf --output-type options are available.
+# TODO: validate this setting.
+OCR_OUTPUT_TYPE = env.str("OCR_OUTPUT_TYPE", "pdfa")
+
+# skip. redo, force
+# TODO: validate this.
+OCR_MODE = env.str("OCR_MODE", "skip")
+
+OCR_IMAGE_DPI = env.int("OCR_IMAGE_DPI", None)
+OCR_CLEAN = env.str("OCR_CLEAN", "clean")
+OCR_DESKEW = env.bool("OCR_DESKEW", True)
+OCR_ROTATE_PAGES = env.bool("OCR_ROTATE_PAGES", True)
+OCR_ROTATE_PAGES_THRESHOLD = env.float("OCR_ROTATE_PAGES_THRESHOLD", 12.0)
+OCR_USER_ARGS = env.json("OCR_USER_ARGS", {})
+OCR_REPLACE_FILE = env.bool("OCR_REPLACE_FILE", False)
+OCR_OPTIMIZE = env.int("OCR_OPTIMIZE", 1)
+
 # When webpack compiles, it replaces the stats file contents with a compiling placeholder.
 # If debug is False and the stats file is in the project root, this leads to a WebpackLoaderBadStatsError.
 # So we place the file besides the assets, so it will be copied over by collectstatic
@@ -236,7 +261,7 @@ GEOEXTRACT_LANGUAGE = env.str("GEOEXTRACT_LANGUAGE", LANGUAGE_CODE.split("-")[0]
 GEOEXTRACT_SEARCH_COUNTRY = env.str("GEOEXTRACT_SEARCH_COUNTRY", "Deutschland")
 GEOEXTRACT_SEARCH_CITY = env.str("GEOEXTRACT_SEARCH_CITY", None)
 
-SUBPROCESS_MAX_RAM = env.int("SUBPROCESS_MAX_RAM", 1024 * 1024 * 1024)  # 1 GB
+SUBPROCESS_MAX_RAM = env.int("SUBPROCESS_MAX_RAM", 1 << 30)  # 1 GB
 
 CITY_AFFIXES = env.list(
     "CITY_AFFIXES",
@@ -253,12 +278,6 @@ CITY_AFFIXES = env.list(
 DISTRICT_REGEX = env.str("DISTRICT_REGEX", r"(^| )kreis|kreis( |$)")
 
 TEXT_CHUNK_SIZE = env.int("TEXT_CHUNK_SIZE", 1024 * 1024)
-
-OCR_AZURE_KEY = env.str("OCR_AZURE_KEY", None)
-OCR_AZURE_LANGUAGE = env.str("OCR_AZURE_LANGUAGE", "de")
-OCR_AZURE_API = env.str(
-    "OCR_AZURE_API", "https://westcentralus.api.cognitive.microsoft.com"
-)
 
 # Configuration regarding the city of choice
 SITE_DEFAULT_BODY = env.int("SITE_DEFAULT_BODY", 1)

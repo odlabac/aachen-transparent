@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 
 from importer.management.commands._import_base_command import ImportBaseCommand
 from mainapp.functions.document_parsing import AddressPipeline, create_geoextract_data
@@ -16,6 +17,7 @@ class Command(ImportBaseCommand):
         parser.add_argument(
             "--max-workers",
             type=int,
+            default=multiprocessing.cpu_count(),
             help="Use only that many processes for the import",
         )
 

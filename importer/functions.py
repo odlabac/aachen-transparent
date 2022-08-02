@@ -1,6 +1,7 @@
 import datetime
 import logging
 import warnings
+from concurrent.futures import Executor
 from contextlib import nullcontext
 from typing import Optional, Set, List, Type
 
@@ -10,6 +11,7 @@ from slugify import slugify
 from urllib3.exceptions import InsecureRequestWarning
 
 from importer import JSON
+from importer.executor import SingleThreadExecutor
 from importer.models import CachedObject, ExternalList
 from mainapp.functions.search import search_bulk_index
 from mainapp.models import (
@@ -143,9 +145,7 @@ def clear_import(prefix: str, include_cache: bool = True) -> None:
 
 
 def import_update(
-    body_id: Optional[str] = None,
-    ignore_modified: bool = False,
-    download_files: bool = True,
+    body_id: Optional[str] = None, download_files: bool = True, **kwargs
 ) -> None:
     from importer.importer import Importer
     from importer.loader import get_loader_from_body
@@ -154,12 +154,12 @@ def import_update(
         bodies = Body.objects.filter(oparl_id=body_id).all()
     else:
         bodies = Body.objects.filter(oparl_id__isnull=False).all()
+
     for body in bodies:
         logger.info(f"Updating body {body}: {body.oparl_id}")
         loader = get_loader_from_body(body.oparl_id)
-        importer = Importer(loader, body, ignore_modified=ignore_modified)
+        importer = Importer(loader, body, **kwargs)
         importer.update(body.oparl_id)
-        importer.force_singlethread = True
         if download_files:
             importer.load_files(
                 fallback_city=settings.GEOEXTRACT_SEARCH_CITY or body.short_name,

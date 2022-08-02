@@ -34,7 +34,7 @@ class TestFileAnalysis(TestCase):
         with open(filename, "rb") as fp:
             loader.files[download_url] = (fp.read(), "application/pdf")
 
-        importer = Importer(loader, force_singlethread=True)
+        importer = Importer(loader, excecutor=SingleThreadExecutor)
 
         [body] = Body.objects.all()
 
@@ -70,7 +70,7 @@ class MockImporter(Importer):
     reason="Github actions seems to not respect the memory limit",
 )
 def test_load_file_oom(caplog):
-    importer = MockImporter(force_singlethread=True)
+    importer = MockImporter(excecutor=SingleThreadExecutor)
 
     with override_settings(SUBPROCESS_MAX_RAM=1 * 1024 * 1024):
         failed = importer.load_files_multiprocessing(

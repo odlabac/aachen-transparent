@@ -7,7 +7,7 @@ from django.test import override_settings
 
 from mainapp.functions.document_parsing import (
     extract_locations,
-    extract_from_file,
+    extract_text,
     extract_persons,
 )
 from mainapp.models import File, Person
@@ -77,7 +77,7 @@ def test_pdf_parsing(pytestconfig, caplog):
     )
 
     with file.open("rb") as fp:
-        parsed_text, page_count = extract_from_file(fp, file, "application/pdf", 0)
+        parsed_text, page_count = extract_text(fp, file, "application/pdf", 0)
     assert caplog.messages == []
     assert "bottles of beer" in parsed_text
     assert page_count == 3
@@ -91,7 +91,7 @@ def test_pdf_parsing_oom(pytestconfig, caplog):
     )
 
     with file.open("rb") as fp:
-        parsed_text, page_count = extract_from_file(fp, file, "application/pdf", 0)
+        parsed_text, page_count = extract_text(fp, file, "application/pdf", 0)
     assert caplog.messages == [
         "File 0: Failed to run pdftotext: Command '['pdftotext', "
         f"PosixPath('{file}'), '-']' returned non-zero exit status 127."
@@ -107,7 +107,7 @@ def test_pdf_as_tiff(pytestconfig, caplog, filename):
     https://github.com/codeformuenster/kubernetes-deployment/pull/65#issuecomment-894232803"""
     file = pytestconfig.rootpath.joinpath("testdata/media").joinpath(filename)
     with file.open("rb") as fp:
-        parsed_text, page_count = extract_from_file(fp, file, "application/pdf", 0)
+        parsed_text, page_count = extract_text(fp, file, "application/pdf", 0)
     assert caplog.messages == [
         "File 0: Failed to run pdftotext: Command '['pdftotext', "
         f"PosixPath('{file}'), '-']' returned non-zero exit status 1.",

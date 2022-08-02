@@ -133,10 +133,6 @@ TWITTER_CLIENT_ID=[app id]
 TWITTER_SECRET_KEY=[app secret]
 ```
 
-### Microsoft Azure: OCR
-
-This is optional if you want to use OCR for extracting the text of scanned documents. Set up a Azure account and add a [Computer Vision](https://azure.microsoft.com/en-us/try/cognitive-services/?api=computer-vision) Resource (part of Cognitive Services). Add the API Key to the `.env` file as `OCR_AZURE_KEY`.
-
 ### Error reporting
 
 You can use [Sentry](https://sentry.io) as error tracking service by setting `SENTRY_DSN`. Optionally set `SENTRY_HEADER_ENDPOINT` to collect csp violations. If you want help us, please ask us for a dsn from our account, so we can keep track of real world errors.
@@ -158,6 +154,33 @@ Meine Stadt Transparent is fully internationalized with German translations main
 * `GEOEXTRACT_SEARCH_CITY`: Sets the fallback city name for the geocoding service. Defaults to the name of the main body
 * `GEOEXTRACT_LANGUAGE`: Language passed to geopy for geocoding, defaults to the first part of `LANGUAGE_CODE`, i.e. "de"
 
+## Optical Caracter Recognition (OCR)
+
+* `OCR_THREADS_PER_WORKER`: Use up to N CPU cores simultaneously (default: use all)
+* `OCR_PAGES`: Limit OCR to the first n-th pages (default: all pages)
+* `OCR_LANGUAGE`: Language(s) of the file to be OCRed (see tesseract --list-langs for all language packs installed in your system). Use -l eng+deu for multiple languages (default: `eng`).
+* `OCR_OUTPUT_TYPE`: Choose output type.
+  * `pdfa` creates a PDF/A-2b compliant file for long term archiving (default, recommended) but may not suitable for users who want their file altered as little as possible. 'pdfa' also has problems with full Unicode text.
+  * `pdf' attempts to preserve file contents as much as possible.
+  * `pdf-a1` creates a PDF/A1-b file.
+  * `pdf-a2` is equivalent to 'pdfa' (default).
+  * `pdf-a3` creates a PDF/A3-b file.
+  * `none` will produce no output, files will be left untouched. Only text will be extracted.
+* `OCR_MODE`:
+  * `force` Rasterize any text or vector objects on each page, apply OCR, and save the rastered output (this rewrites the PDF)
+  * `skip` Skip OCR on any pages that already contain text, but include the page in final output; useful for PDFs that contain a mix of images, text pages, and/or previously OCRed pages
+  * `redo` Attempt to detect and remove the hidden OCR layer from files that were previously OCRed with OCRmyPDF or another program. Apply OCR to text found in raster images. Existing visible text objects will not be changed. If there is no existing OCR, OCR will be added.
+* `OCR_IMAGE_DPI`: For input image instead of PDF, use this DPI instead of file's.
+* `OCR_CLEAN`:
+  * `clean` Clean pages from scanning artifacts before performing OCR, and send the cleaned page to OCR, but do not include the cleaned page in the output (default)
+  * `clean-final` Clean page as above, and incorporate the cleaned image in the final PDF. Might remove desired content.
+* `OCR_DESKEW`: Deskew each page before performing OCR (default: `True`)
+* `OCR_ROTATE_PAGES`: Automatically rotate pages based on detected text orientation (default: `True`)
+* `OCR_ROTATE_PAGES_THRESHOLD`: (default: `12.0`)
+* `OCR_USER_ARGS`: Additional arguments for OCRmyPDF (default: `{}`)
+* `OCR_REPLACE_FILE`: Overwrite the orginal documents with an OCR-enhanced version which contains the recognized text in an overlay text layer (default: `False`)
+* `OCR_OPTIMIZE`: Control how PDF is optimized after processing:0 - do not optimize; 1 - do safe, lossless optimizations (default); 2 - do lossy JPEG and JPEG2000 optimizations; 3 - do more aggressive (default: `1`)
+
 ## Various
 
 * `CALENDAR_DEFAULT_VIEW`: Possible values: `month`, `listYear`, `listMonth`, `listDay`, `basicWeek`, `basicDay`, `agendaWeek`, `agendaDay`
@@ -172,8 +195,7 @@ Meine Stadt Transparent is fully internationalized with German translations main
 * `EMAIL_FROM` and `EMAIL_FROM_NAME`: Sender address and name for notifications. Defaults to `info@REAL_HOST` and `SITE_NAME`
 * `EMBED_PARSED_TEXT_FOR_SCREENREADERS`: pdfs are really bad for blind people, so this includes the plain text of PDFs next to the PDF viewer, visible only for Screenreaders. On by default to improve accessibility, deactivatable in case there are legal concerns.
 * `FILE_DISCLAIMER`: This is a small text shown below every document to tell people we're not the original publisher of that document. `FILE_DISCLAIMER_URL` is shown as link next to the
-* `OCR_AZURE_KEY`: [Azure](https://azure.microsoft.com) has an ocr service with high accuracy. Since it's pay-per-use, it must be manually used through `./manage.py ocr-file`. If you want to use azure, set `OCR_AZURE_KEY` to your api key. You can also set `OCR_AZURE_LANGUAGE`, which defaults to `de` for German, and `OCR_AZURE_API`, which
-  `SEARCH_PAGINATION_LENGTH`
+* `SEARCH_PAGINATION_LENGTH`
 * `SECURE_HSTS_INCLUDE_SUBDOMAINS`: Sets the include subdomains option in the hsts header we send. Deactivatable if you have legacy services running on subdomains.
 * `SITE_SEO_NOINDEX`: Set this to true to hide the site from the google index.
 * `TEMPLATE_DIRS`: Allows customization by overriding templates. See the readme for more details.

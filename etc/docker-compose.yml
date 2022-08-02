@@ -13,7 +13,7 @@ services:
 
   django_worker:
     <<: *django
-    containter_name: django_worker
+    container_name: django_worker
     command: ["/app/.venv/bin/python", "/app/manage.py", "qcluster"]
 
   mariadb:
@@ -29,6 +29,8 @@ services:
     networks:
       - mst_network
     command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    ports:
+      - 3306:3306
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.13.2
@@ -46,6 +48,8 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - mst_network
+    ports:
+      - 9200:9200
 
   minio:
       image: minio/minio
@@ -57,9 +61,10 @@ services:
         MINIO_SECRET_KEY: changeme
       ports:
         - 9000:9000
+        - 9001:9001
       networks:
         - mst_network
-      command: server /minio_data
+      command: server /minio_data --console-address ":9001"
 
 volumes:
   mariadb_data:

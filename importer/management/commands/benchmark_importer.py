@@ -1,6 +1,7 @@
 import logging
-
+from concurrent.futures import MultiThreadExecutor
 from django.core.management import BaseCommand
+from importer.executor import SingleThreadExecutor
 
 from importer.importer import Importer
 from importer.loader import get_loader_from_body
@@ -29,8 +30,13 @@ class Command(BaseCommand):
 
         body = Body.objects.get(oparl_id__startswith=prefix)
         loader = get_loader_from_body(body.oparl_id)
-        importer = Importer(loader, body)
-        importer.force_singlethread = options["force_singlethread"]
+        importer = Importer(
+            loader,
+            body,
+            executor=SingleThreadExecutor
+            if options["force_singlethread"]
+            else MultiThreadExecutor,
+        )
 
         import_plan = [File, Paper, Consultation, AgendaItem]
 

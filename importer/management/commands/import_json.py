@@ -6,6 +6,7 @@ from pathlib import Path
 from dateutil import tz
 from django.conf import settings
 from django.core.management import BaseCommand, CommandParser, CommandError
+from importer.executor import SingleThreadExecutor
 
 from importer.functions import fix_sort_date
 from importer.import_json import import_data
@@ -100,7 +101,8 @@ class Command(BaseCommand):
         fix_sort_date(datetime.datetime.now(tz=tz.tzlocal()))
 
         if not options["skip_download"]:
-            Importer(force_singlethread=True).load_files(
+            importer = Importer(executor=SingleThreadExecutor)
+            importer.load_files(
                 fallback_city=settings.GEOEXTRACT_SEARCH_CITY or body.short_name
             )
 

@@ -14,6 +14,7 @@ from django.test import modify_settings, override_settings
 from django.utils import timezone
 from django_elasticsearch_dsl.registries import registry
 from minio.error import MinioException
+from importer.executor import SingleThreadExecutor
 
 from importer.import_json import (
     import_data,
@@ -448,7 +449,7 @@ def test_manual_deletion(pytestconfig, caplog):
             status=200,
             content_type="text/plain",
         )
-        importer = Importer(force_singlethread=True)
+        importer = Importer(excecutor=SingleThreadExecutor)
         [successful, failed] = importer.load_files(sample_city.name)
         assert successful == 1 and failed == 0
 
@@ -467,7 +468,7 @@ def test_manual_deletion(pytestconfig, caplog):
 
     assert not models.File.objects.filter(pk=file_id).first()
     with responses.RequestsMock():
-        importer = Importer(force_singlethread=True)
+        importer = Importer(excecutor=SingleThreadExecutor)
         [successful, failed] = importer.load_files(sample_city.name)
         assert successful == 0 and failed == 0
 
@@ -489,7 +490,7 @@ def test_file_404(pytestconfig, caplog):
 
     with responses.RequestsMock() as requests_mock:
         requests_mock.add(responses.GET, url, status=404, content_type="text/plain")
-        importer = Importer(force_singlethread=True)
+        importer = Importer(excecutor=SingleThreadExecutor)
         [successful, failed] = importer.load_files(sample_city.name, update=True)
         assert successful == 0 and failed == 1
 

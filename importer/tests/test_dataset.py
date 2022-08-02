@@ -5,6 +5,7 @@ import os
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django.utils import timezone
+from importer.executor import SingleThreadExecutor
 
 from importer.importer import Importer
 from importer.tests.utils import MockLoader
@@ -127,7 +128,7 @@ class TestDataset(TestCase):
             self.base_timestamp + relativedelta(years=-100)
         ).isoformat()
         self.init_mock_loader()
-        importer = Importer(self.loader, force_singlethread=True)
+        importer = Importer(self.loader, excecutor=SingleThreadExecutor)
         importer.run(self.body_id)
         now = timezone.now()
 
@@ -158,7 +159,7 @@ class TestDataset(TestCase):
             File,
         ]  # must have modified and File for #41
         newer_now = timezone.now()
-        importer = Importer(self.loader, force_singlethread=True)
+        importer = Importer(self.loader, excecutor=SingleThreadExecutor)
         importer.update(self.body_id)
         for table in tables_with_modified:
             logger.debug(table.__name__)
@@ -167,7 +168,7 @@ class TestDataset(TestCase):
     def check_update(self):
         self.new_timestamp = (self.base_timestamp + relativedelta(years=10)).isoformat()
         self.init_mock_loader()
-        importer = Importer(self.loader, force_singlethread=True)
+        importer = Importer(self.loader, excecutor=SingleThreadExecutor)
         importer.update(self.body_id)
         for table, count in self.tables.items():
             self.assertEqual(
@@ -183,7 +184,7 @@ class TestDataset(TestCase):
         ).isoformat()
         self.delete = True
         self.init_mock_loader()
-        importer = Importer(self.loader, force_singlethread=True)
+        importer = Importer(self.loader, excecutor=SingleThreadExecutor)
         importer.update(self.body_id)
         for table, count in self.tables.items():
             # It doesn't make sense if our Body was deleted

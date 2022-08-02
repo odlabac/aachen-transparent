@@ -93,7 +93,7 @@ def test_missing_organization(pytestconfig, caplog):
                     ).read_text()
                 )
             ),
-            force_singlethread=True,
+            excecutor=SingleThreadExecutor,
         )
         [body_data] = importer.load_bodies(body_id)
         [body] = importer.import_bodies()

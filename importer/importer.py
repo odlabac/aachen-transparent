@@ -1,6 +1,6 @@
 import logging
 import sys
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, Executor
 from tempfile import NamedTemporaryFile
 from typing import Optional, List, Type, Tuple
 from typing import TypeVar, Any, Set
@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from elasticsearch import ElasticsearchException
 from requests import RequestException
+import requests.exceptions
 from tqdm import tqdm
 
 from importer import JSON
@@ -23,8 +24,9 @@ from importer.functions import externalize
 from importer.json_to_db import JsonToDb
 from importer.loader import BaseLoader
 from importer.models import CachedObject, ExternalList
+from importer.executor import run, SingleThreadExecutor
 from mainapp.functions.document_parsing import (
-    extract_from_file,
+    extract_text,
     extract_locations,
     extract_persons,
     AddressPipeline,
@@ -51,19 +53,23 @@ logger = logging.getLogger(__name__)
 
 
 class Importer:
+    # Workaround for django-q
+    # https://github.com/Koed00/django-q/issues/613
+    __name__ = "Importer"
+
     lists = ["paper", "person", "meeting", "organization"]
 
     def __init__(
         self,
         loader: BaseLoader = BaseLoader(),
         default_body: Optional[Body] = None,
-        ignore_modified: bool = False,
+        update_modified: bool = False,
         download_files: bool = True,
-        force_singlethread: bool = False,
+        executor: Executor = SingleThreadExecutor,
     ):
-        self.force_singlethread = force_singlethread
-        self.ignore_modified = ignore_modified
+        self.update_modified = update_modified
         self.download_files = download_files
+        self.executor = executor
 
         self.loader = loader
         default_body = (
@@ -87,13 +93,15 @@ class Importer:
             for list_type in self.lists:
                 all_lists.append(body_entry[list_type])
 
-        if not self.force_singlethread:
-            # These lists are implemented so extremely slow that this brings a leap in performance
-            with ThreadPoolExecutor() as executor:
-                list(executor.map(self.fetch_list_initial, all_lists))
-        else:
-            for external_list in all_lists:
-                self.fetch_list_initial(external_list)
+        if self.executor == ProcessPoolExecutor:
+            # We need to close the database connections, which will be automatically reopen for
+            # each process
+            # See https://stackoverflow.com/a/10684672/3549270
+            # and https://brobin.me/blog/2017/05/mutiprocessing-in-python-django-management-commands/
+            db.connections.close_all()
+
+        run(self.executor, {}, self.fetch_list_initial, all_lists)
+
         logger.info(f"Loading {all_lists} lists was successful")
 
     T = TypeVar("T", bound=DefaultFields)
@@ -356,10 +364,15 @@ class Importer:
             fresh = CachedObject.objects.filter(url=later, to_import=True).exists()
 
             if not fresh:
-                data = self.loader.load(later)
-                CachedObject.objects.filter(url=later).update(
-                    data=data, oparl_type=data["type"].split("/")[-1], to_import=True
-                )
+                try:
+                    data = self.loader.load(later)
+                    CachedObject.objects.filter(url=later).update(
+                        data=data,
+                        oparl_type=data["type"].split("/")[-1],
+                        to_import=True,
+                    )
+                except requests.exceptions.HTTPError as e:
+                    logger.warn(f"Failed to fetch file: {later}: {e}")
 
         self.import_objects(update=True)
 
@@ -419,7 +432,7 @@ class Importer:
 
             # If the api has text, keep that
             if self.download_files and not file.parsed_text:
-                file.parsed_text, file.page_count = extract_from_file(
+                file.parsed_text, file.page_count = extract_text(
                     tmp_file.file, tmp_file.name, file.mime_type, file.id
                 )
 
@@ -449,45 +462,6 @@ class Importer:
 
         return True
 
-    def load_files_multiprocessing(
-        self,
-        address_pipeline: AddressPipeline,
-        fallback_city: str,
-        files: List[int],
-        max_workers: Optional[int] = None,
-        pbar: Optional[tqdm] = None,
-    ) -> int:
-        failed = 0
-        with ProcessPoolExecutor(
-            max_workers=max_workers, initializer=limit_memory
-        ) as executor:
-            tasks = [
-                (
-                    file,
-                    executor.submit(
-                        self.download_and_analyze_file,
-                        file,
-                        address_pipeline,
-                        fallback_city,
-                    ),
-                )
-                for file in files
-            ]
-            for file, task in tasks:
-                try:
-                    succeeded = task.result()
-                except MemoryError:
-                    logger.warning(
-                        f"File {file}: Import failed du to excessive memory usage "
-                        f"(Limit: {settings.SUBPROCESS_MAX_RAM})"
-                    )
-                    succeeded = False
-                if not succeeded:
-                    failed += 1
-                if pbar:
-                    pbar.update()
-        return failed
-
     def load_files(
         self,
         fallback_city: str,
@@ -497,57 +471,45 @@ class Importer:
         """Downloads and analyses the actual file for the file entries in the database.
 
         Returns the number of successful and failed files"""
-        # This is partially bound by waiting on external resources, but mostly very cpu intensive,
-        # so we can spawn a bunch of processes to make this a lot faster.
-        # We need to build a list because mysql connections and process pools don't pair well.
-        files = list(
+
+        files = (
             File.objects.filter(filesize__isnull=True, oparl_access_url__isnull=False)
             .order_by("-id")
             .values_list("id", flat=True)
         )
+
         if not files:
             logger.info("No files to import")
             return 0, 0
+
         logger.info(f"Downloading and analysing {len(files)} files")
         address_pipeline = AddressPipeline(create_geoextract_data())
-        pbar = None
-        if sys.stdout.isatty() and not settings.TESTING:
-            pbar = tqdm(total=len(files))
-        failed = 0
-        successful = 0
 
-        if not self.force_singlethread:
+        # This is partially bound by waiting on external resources, but mostly very cpu intensive,
+        # so we can spawn a bunch of processes to make this a lot faster.
+        if self.executor == ProcessPoolExecutor:
             # We need to close the database connections, which will be automatically reopen for
             # each process
             # See https://stackoverflow.com/a/10684672/3549270
             # and https://brobin.me/blog/2017/05/mutiprocessing-in-python-django-management-commands/
+            # We need to build a list because mysql connections and process pools don't pair well.
+            files = list(files)
             db.connections.close_all()
 
-            failed = self.load_files_multiprocessing(
-                address_pipeline, fallback_city, files, max_workers, pbar
-            )
-
-        else:
-            for file in files:
-                succeeded = self.download_and_analyze_file(
-                    file, address_pipeline, fallback_city
-                )
-
-                if not succeeded:
-                    failed += 1
-                else:
-                    successful += 1
-
-                if pbar:
-                    pbar.update()
-        if pbar:
-            pbar.close()
+        failed, succeeded = run(
+            self.executor,
+            {"max_workers": max_workers, "initializer": limit_memory},
+            self.download_and_analyze_file,
+            files,
+            address_pipeline,
+            fallback_city,
+        )
 
         if failed > 0:
             logger.error(f"{failed} files failed to download")
             # not update because these might be files that failed before
-            if successful == 0 and not update:
+            if succeeded == 0 and not update:
                 raise RuntimeError("All files failed to download")
-        logger.info(f"{successful} files imported successfully")
+        logger.info(f"{succeeded} files imported successfully")
 
-        return successful, failed
+        return succeeded, failed

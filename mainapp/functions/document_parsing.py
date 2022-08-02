@@ -3,19 +3,13 @@ import re
 import sys
 import resource
 import string
-import subprocess
-import tempfile
-from subprocess import CalledProcessError
+from pdfminer.high_level import extract_text as pdfminer_extract_text
 from typing import Dict, List, Optional, Tuple, IO
 
+import pikepdf
 import geoextract
-import requests
-from PyPDF2.pdf import PdfFileReader
-from PyPDF2.utils import PdfReadError
 from django import db
 from django.conf import settings
-from wand.color import Color
-from wand.image import Image
 
 from mainapp.functions.geo_functions import geocode
 from mainapp.models import SearchStreet, Body, Location, Person
@@ -76,15 +70,15 @@ def limit_memory():
     """
 
     if sys.platform == "darwin":
-        logger.warn("Memory limits not set on Darwin!")
+        logger.warning("Memory limits not set on Darwin!")
         return
 
-    resource.setrlimit(
-        resource.RLIMIT_AS, (settings.SUBPROCESS_MAX_RAM, resource.RLIM_INFINITY)
-    )
+    # resource.setrlimit(
+    #     resource.RLIMIT_AS, (settings.SUBPROCESS_MAX_RAM, resource.RLIM_INFINITY)
+    # )
 
 
-def extract_from_file(
+def extract_text(
     file: IO[bytes], filename: str, mime_type: str, file_id: int
 ) -> Tuple[Optional[str], Optional[int]]:
     """Returns the text and the page count"""
@@ -93,34 +87,22 @@ def extract_from_file(
     page_count = None
     if mime_type == "application/pdf" or mime_type.startswith("application/pdf;"):
         try:
-            command = ["pdftotext", filename, "-"]
-            completed = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-                preexec_fn=limit_memory,
-            )
-            parsed_text = completed.stdout.decode("utf-8", "ignore")
-            if completed.stderr:
-                logger.info("pdftotext: {}".format(completed.stderr))
-        except CalledProcessError as e:
+            parsed_text = pdfminer_extract_text(file)
+        except Exception as e:
             logger.exception("File {}: Failed to run pdftotext: {}".format(file_id, e))
 
         try:
-            page_count = PdfFileReader(
-                file, strict=False, overwriteWarnings=False
-            ).getNumPages()
-        except (PdfReadError, KeyError):
+            with pikepdf.open(file) as pdf_file:
+                page_count = len(pdf_file.pages)
+        except pikepdf.PasswordError:
+            logger.warning("File %s: PDF is password protected", file_id)
+        except pikepdf.PdfError as e:
             logger.warning(
-                "File {}: Pdf does not allow to read the number of pages".format(
-                    file_id
-                )
+                "File %s: PDF does not allow to read the number of pages: %s",
+                file_id,
+                e,
             )
-        except OSError as e:
-            # Workaround for PyPDF2 bug
-            # https://github.com/codeformuenster/kubernetes-deployment/pull/65#issuecomment-894232803
-            logger.exception(f"PyPDF2 failed: {e}")
+
     elif mime_type == "text/text":
         parsed_text = file.read()
     else:
@@ -129,61 +111,19 @@ def extract_from_file(
 
 
 def cleanup_extracted_text(text: str) -> str:
+    if not text:
+        return None
+
     # Tries to merge hyphenated text back into whole words; last and first characters have to be lower case
-    return re.sub(r"([a-z])-\s*\n([a-z])", r"\1\2", text)
+    merge_hyphenated = re.sub(r"([a-z])-\s*\n([a-z])", r"\1\2", text)
+    collapsed_spaces = re.sub(r"([^\S\r\n]+)", " ", merge_hyphenated)
+    no_leading_whitespace = re.sub(r"([\n\r]+)([^\S\n\r]+)", "\\1", collapsed_spaces)
+    no_trailing_whitespace = re.sub(r"([^\S\n\r]+)$", "", no_leading_whitespace)
 
-
-def perform_ocr_on_image(imgdata):
-    headers = {
-        "Ocp-Apim-Subscription-Key": settings.OCR_AZURE_KEY,
-        "Content-Type": "application/octet-stream",
-    }
-    params = {"language": settings.OCR_AZURE_LANGUAGE, "detectOrientation ": "true"}
-    ocr_url = settings.OCR_AZURE_API + "/vision/v1.0/ocr"
-    response = requests.post(ocr_url, headers=headers, params=params, data=imgdata)
-    response.raise_for_status()
-
-    analysis = response.json()
-    plain_text = ""
-    for region in analysis["regions"]:
-        for line in region["lines"]:
-            for word in line["words"]:
-                plain_text += word["text"] + " "
-            plain_text += "\n"
-        plain_text += "\n"
-
-    return plain_text
-
-
-def get_ocr_text_from_pdf(file):
-    img = Image(blob=file, resolution=500)
-    recognized_text = ""
-    for single_image in img.sequence:
-        with Image(single_image) as i:
-            i.resolution = 100
-            i.format = "png"
-            i.background_color = Color("white")
-            i.alpha_channel = "remove"
-
-            tmpfile = tempfile.TemporaryFile()
-            i.save(file=tmpfile)
-            tmpfile.seek(0)
-            imgdata = tmpfile.read()
-            tmpfile.close()
-
-            # Workaround: Shrink image until the size is below Azure's upload limit of 4MB
-            while len(imgdata) > 4000000:
-                i.resize(round(i.width * 0.75), round(i.height * 0.75))
-
-                tmpfile = tempfile.TemporaryFile()
-                i.save(file=tmpfile)
-                tmpfile.seek(0)
-                imgdata = tmpfile.read()
-                tmpfile.close()
-
-            recognized_text += perform_ocr_on_image(imgdata)
-
-    return recognized_text
+    # TODO: this needs a rework
+    # replace \0 prevents issues with saving to postgres.
+    # text may contain \0 when this character is present in PDF files.
+    return no_trailing_whitespace.strip().replace("\0", " ")
 
 
 def create_geoextract_data(bodies: Optional[List[Body]] = None) -> List[Dict[str, str]]:
